@@ -40,33 +40,27 @@ table{border-collapse:collapse;width:100%}td{border-bottom:1px solid #eee;paddin
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
-firebase.initializeApp({databaseURL:"https://funprot6-default-rtdb.firebaseio.com"});
-const NS=43,LAST=43,SC=[5,8,20,23,31,38];
+firebase.initializeApp({databaseURL:"https://TU-PROYECTO-default-rtdb.firebaseio.com"});
+const NS=43,LAST=43,SC=[5,8,20,31,38];
 const YN=['Aprobado','No aprobado'];
 const ACT={
 2:{t:'nube',h:'Nube de palabras: ¿qué riesgos aparecen cuando un programa funciona pero crece sin organización?'},
-5:{t:'sel',p:15,sh:1,h:'Repaso: parámetros, retorno y llamada',o:['Parámetro','Argumento','Valor retornado','Variable local'],i:[
+5:{t:'sel',p:20,sh:1,h:'Repaso: parámetros, retorno y llamada',o:['Parámetro','Argumento','Valor retornado','Variable local'],i:[
  ['En def calcular_promedio(notas), ¿qué es notas?',0],
  ['En calcular_promedio([15, 17, 12, 16]), ¿qué es la lista entre paréntesis?',1],
  ['¿Qué es el 15.0 que sale de la función y se guarda en resultado?',2],
  ['¿Qué es suma, declarada dentro de la función?',3]]},
-8:{t:'sel',p:15,sh:1,h:'Sistema de notas: ¿qué tareas separarías?',o:['Función separada (procesamiento)','Puede quedar en el principal (entrada/salida)'],j:'Justifica con una responsabilidad concreta una de tus decisiones:',i:[
+8:{t:'sel',p:20,sh:1,h:'Sistema de notas: ¿qué tareas separarías?',o:['Función separada (procesamiento)','Puede quedar en el principal (entrada/salida)'],j:'Justifica con una responsabilidad concreta una de tus decisiones:',i:[
  ['Pedir notas',1],['Calcular promedio',0],['Determinar condición',0],['Mostrar resultados',1]]},
-20:{t:'sel',p:15,sh:1,h:'Condición académica reutilizable (aprobado si promedio ≥ 13)',o:YN,i:[
+20:{t:'sel',p:20,sh:1,h:'Condición académica reutilizable (aprobado si promedio ≥ 13)',o:YN,i:[
  ['Promedio 13 →',0],['Promedio 12.99 →',1],
  ['¿Qué retorna determinar_condicion cuando la condición es falsa?',1,['"Aprobado"','"No aprobado"','Nada (None)','False']],
  ['¿Dónde se agrega determinar_condicion en Python?',0,['Al módulo calculos.py','Solo en main.py','Dentro de calcular_promedio','En un archivo nuevo obligatorio']]]},
-23:{t:'sel',p:20,sh:1,h:'Errores frecuentes al conectar archivos: identifica el error',o:['Nombre importado equivocado','Archivo, clase y método confundidos','Variable local usada desde otro archivo','Cálculo mezclado con entrada/salida'],j:'Explica cómo corregirías uno de los errores:',i:[
- ['from calculos import promedio, pero la función se llama calcular_promedio',0],
- ['Calculo.CalculosPromedio(...) en lugar de Calculos.CalcularPromedio(...)',1],
- ['main.py usa suma, variable declarada dentro de calcular_promedio',2],
- ['Una función calcula el promedio y además pide las notas con input()',3]]},
-31:{t:'sel',p:20,sh:1,h:'Pruebas del sistema: predice el resultado (escala 0–20, aprobado desde 13)',o:['Aprobado','No aprobado','Datos no válidos'],i:[
+31:{t:'sel',p:25,sh:1,h:'Pruebas del sistema: predice el resultado (escala 0–20, aprobado desde 13)',o:['Aprobado','No aprobado','Datos no válidos'],i:[
  ['Entrada [13]',0],['Entrada [12.99]',1],['Entrada []',2],
  ['Entrada [0, 20]',1,['10.00 / Aprobado','10.00 / No aprobado','20.00 / Aprobado','Datos no válidos']],
  ['Entrada [15, 21]',2]]},
 38:{t:'sel',p:15,sh:1,h:'Transferencia: reutiliza la función de promedio',i:[
- ['Promedio de notas_turno_noche = [14, 13, 18, 16, 15]',1,['14.00','15.20','16.00','76.00']],
  ['Al reutilizar la función con otros datos, ¿qué cambia?',0,['El argumento de la llamada','La definición de la función','El nombre de la función','El archivo calculos.py']],
  ['En el sistema completo, ¿qué se hace antes de llamar al cálculo?',0,['Validar las notas','Copiar la función','Instalar un paquete','Cambiar la fórmula']]]},
 24:{t:'txt',h:'Organización de funciones (en parejas)',f:['Funciones en calculos.py','Funciones en main.py','Línea de importación','Secuencia de llamadas después de validar']},
@@ -78,9 +72,8 @@ const T={
 5:[['Parámetros, retorno y llamada',5]],
 8:[['Entrada/salida y principal',10],['Funciones de cálculo',7],['Condición académica',10],['Entrada/salida y principal',10]],
 20:[['Condición académica reutilizable',20]],
-23:[['Importar con el nombre correcto',11],['Archivo, clase y método (C#)',15],['Variables locales, parámetros y retorno',5],['Una responsabilidad por componente',10]],
 31:[['Condición y umbral',20],['Condición y umbral',20],['Validación antes de calcular',13],['Tabla de pruebas y casos límite',31],['Validación antes de calcular',13]],
-38:[['Reutilización de funciones',34],['Reutilización de funciones',34],['Validación antes de calcular',13]]};
+38:[['Reutilización de funciones',34],['Validación antes de calcular',13]]};
 const db=firebase.database(),$=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 let S={i:0,libre:false,pub:false,act:{},rev:{},mostrar:{}},me,ref,R={},NB={},sig='';
