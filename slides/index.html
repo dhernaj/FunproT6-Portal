@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tema 6 · Programación modular y reutilización</title>
+<style>
+:root{--g:#ffc000;--bg:#f2f2f2;--c:#fff;--k:#111;--ok:#1e8e4e;--no:#c0392b}
+*{box-sizing:border-box}body{margin:0;font:15px system-ui,sans-serif;background:var(--bg);color:var(--k)}
+header{background:var(--k);color:var(--g);padding:8px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+header b{font-size:16px}header small{color:#fff;opacity:.8}
+main{max-width:1100px;margin:0 auto;padding:10px}
+#lg{max-width:380px;margin:40px auto;background:var(--c);padding:22px;border-radius:10px;box-shadow:0 2px 10px #0002}
+#lg h2{margin:0 0 12px}input,select,textarea{width:100%;padding:8px;margin:4px 0 10px;border:1px solid #bbb;border-radius:6px;font:inherit}
+button{background:var(--k);color:var(--g);border:0;padding:8px 14px;border-radius:6px;font:inherit;font-weight:600;cursor:pointer;margin:2px}
+button.s{background:#ddd;color:var(--k)}button.on{background:var(--g);color:var(--k);outline:2px solid var(--k)}
+#sl{width:100%;aspect-ratio:16/9;background:#000;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;text-align:center;overflow:hidden}
+#sl img{width:100%;height:100%;object-fit:contain}
+#nav{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:8px 0}
+#panel{background:var(--c);border-radius:8px;padding:14px;margin-top:6px;box-shadow:0 1px 5px #0002}
+#panel:empty{display:none}h3{margin:0 0 8px}h3 small{color:#666;font-weight:400}
+.it{border-bottom:1px solid #eee;padding:6px 0}.it p{margin:2px 0}.ok{color:var(--ok);font-weight:600}.no{color:var(--no);font-weight:600}
+.bar{position:relative;background:#eee;border-radius:4px;margin:5px 0;padding:5px 8px;overflow:hidden}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:#ffc00099}.bar span,.bar b{position:relative}.bar b{float:right}
+#cl{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;justify-content:center;padding:10px}
+table{border-collapse:collapse;width:100%}td{border-bottom:1px solid #eee;padding:5px}td:last-child{text-align:right;font-weight:600}
+.tx{background:#f7f7f7;border-left:4px solid var(--g);padding:6px 10px;margin:6px 0;font-size:14px}
+.big{font-size:34px;font-weight:700}
+</style></head><body>
+<header><div><b>Tema 6 · Programación modular y reutilización</b><br><small>Ing. Danny Herrera Nájar</small></div><div id="who"></div></header>
+<main>
+<div id="lg"><h2>Ingresar a la sesión</h2>
+<label>Código de sala</label><input id="sala" placeholder="ej. t6-prueba">
+<label>Código de estudiante</label><input id="cod">
+<label>Nombre</label><input id="nom">
+<label>Grupo</label><input id="gr" placeholder="ej. G1">
+<button onclick="enter(0)">Entrar como estudiante</button> <button class="s" onclick="enter(1)">Soy docente</button></div>
+<div id="app" hidden>
+<div id="sl"></div>
+<div id="nav"></div>
+<div id="panel"></div>
+</div></main>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+firebase.initializeApp({databaseURL:"https://funprot6-default-rtdb.firebaseio.com"});
+const NS=43,LAST=43,SC=[5,8,20,31,38];
+const YN=['Aprobado','No aprobado'];
+const ACT={
+2:{t:'nube',h:'Nube de palabras: ¿qué riesgos aparecen cuando un programa funciona pero crece sin organización?'},
+5:{t:'sel',p:20,sh:1,h:'Repaso: parámetros, retorno y llamada',o:['Parámetro','Argumento','Valor retornado','Variable local'],i:[
+ ['En def calcular_promedio(notas), ¿qué es notas?',0],
+ ['En calcular_promedio([15, 17, 12, 16]), ¿qué es la lista entre paréntesis?',1],
+ ['¿Qué es el 15.0 que sale de la función y se guarda en resultado?',2],
+ ['¿Qué es suma, declarada dentro de la función?',3]]},
+8:{t:'sel',p:20,sh:1,h:'Sistema de notas: ¿qué tareas separarías?',o:['Función separada (procesamiento)','Puede quedar en el principal (entrada/salida)'],j:'Justifica con una responsabilidad concreta una de tus decisiones:',i:[
+ ['Pedir notas',1],['Calcular promedio',0],['Determinar condición',0],['Mostrar resultados',1]]},
+20:{t:'sel',p:20,sh:1,h:'Condición académica reutilizable (aprobado si promedio ≥ 13)',o:YN,i:[
+ ['Promedio 13 →',0],['Promedio 12.99 →',1],
+ ['¿Qué retorna determinar_condicion cuando la condición es falsa?',1,['"Aprobado"','"No aprobado"','Nada (None)','False']],
+ ['¿Dónde se agrega determinar_condicion en Python?',0,['Al módulo calculos.py','Solo en main.py','Dentro de calcular_promedio','En un archivo nuevo obligatorio']]]},
+31:{t:'sel',p:25,sh:1,h:'Pruebas del sistema: predice el resultado (escala 0–20, aprobado desde 13)',o:['Aprobado','No aprobado','Datos no válidos'],i:[
+ ['Entrada [13]',0],['Entrada [12.99]',1],['Entrada []',2],
+ ['Entrada [0, 20]',1,['10.00 / Aprobado','10.00 / No aprobado','20.00 / Aprobado','Datos no válidos']],
+ ['Entrada [15, 21]',2]]},
+38:{t:'sel',p:15,sh:1,h:'Transferencia: reutiliza la función de promedio',i:[
+ ['Al reutilizar la función con otros datos, ¿qué cambia?',0,['El argumento de la llamada','La definición de la función','El nombre de la función','El archivo calculos.py']],
+ ['En el sistema completo, ¿qué se hace antes de llamar al cálculo?',0,['Validar las notas','Copiar la función','Instalar un paquete','Cambiar la fórmula']]]},
+24:{t:'txt',h:'Organización de funciones (en parejas)',f:['Funciones en calculos.py','Funciones en main.py','Línea de importación','Secuencia de llamadas después de validar']},
+32:{t:'txt',h:'Legibilidad y dos casos de prueba',f:['Nombres mejorados (p, x, s, a)','Docstring: propósito, entrada y retorno','Predicción para [10, 20]','Predicción para [13]']},
+39:{t:'txt',h:'Actividad integradora: reporte del equipo',f:['Lenguaje elegido','Archivos y responsabilidad de cada uno','Casos de prueba registrados (resumen)']},
+41:{t:'txt',h:'Pregunta de salida',f:['Si cambia la fórmula del promedio, ¿qué archivo modificarías y qué pruebas volverías a ejecutar?']}
+};
+const T={
+5:[['Parámetros, retorno y llamada',5]],
+8:[['Entrada/salida y principal',10],['Funciones de cálculo',7],['Condición académica',10],['Entrada/salida y principal',10]],
+20:[['Condición académica reutilizable',20]],
+31:[['Condición y umbral',20],['Condición y umbral',20],['Validación antes de calcular',13],['Tabla de pruebas y casos límite',31],['Validación antes de calcular',13]],
+38:[['Reutilización de funciones',34],['Validación antes de calcular',13]]};
+const db=firebase.database(),$=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let got=0,S={i:0,libre:false,pub:false,act:{},rev:{},mostrar:{}},me,ref,R={},NB={},sig='';
+try{const z=JSON.parse(localStorage.t6||'{}');['sala','cod','nom','gr'].forEach(k=>z[k]&&($(k).value=z[k]))}catch(e){}
+async function enter(d){
+ const g=k=>$(k).value.trim(),sala=g('sala').toLowerCase().replace(/[^a-z0-9_-]/g,'');
+ if(!sala)return alert('Escribe el código de sala');
+ me={d,sala,cod:g('cod').replace(/[.#$\/\[\]\s]/g,''),nom:g('nom'),gr:g('gr')||'—',li:null};
+ if(!d&&(!me.cod||!me.nom))return alert('Completa código y nombre');
+ try{localStorage.t6=JSON.stringify({sala,cod:g('cod'),nom:g('nom'),gr:g('gr')})}catch(e){}
+ ref=db.ref('salas/'+sala);
+ if(d){const k=prompt('Clave docente (si la sala es nueva, esta clave quedará guardada):');if(!k)return;
+  const p=(await ref.child('pin').once('value')).val();
+  if(p&&p!==k)return alert('Clave incorrecta');if(!p)await ref.child('pin').set(k)}
+ $('lg').hidden=true;$('app').hidden=false;$('who').innerHTML=d?'Docente · sala '+esc(sala):esc(me.nom)+' · '+esc(me.gr);
+ const fail=m=>{$('nav').innerHTML='<span class="no">'+m+'</span>'};
+ $('nav').textContent='Conectando…';setTimeout(()=>{if(!got)fail('Sin conexión con la base de datos. Revisa la dirección de Firebase y las reglas.')},8000);
+ ref.child('estado').on('value',s=>{got=1;const v=s.val()||{},pi=S.i;
+  S={i:0,libre:false,pub:false,...v,act:v.act||{},rev:v.rev||{},mostrar:v.mostrar||{}};
+  if(S.i!==pi||(!S.libre&&!S.pub))me.li=null;draw()},e=>fail('Firebase rechazó el acceso ('+e.code+'). Revisa las reglas de la base de datos.'));
+ ref.child('resp').on('value',s=>{R=s.val()||{};panel()});
+ ref.child('nube').on('value',s=>{NB=s.val()||{};panel()});
+ if(d)document.onkeydown=e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA')return;if(e.key==='ArrowRight')go(S.i+1);if(e.key==='ArrowLeft')go(S.i-1)};
+}
+const cur=()=>me.li!=null?me.li:S.i;
+function go(n){n=Math.max(0,Math.min(NS-1,n));if(me.d)ref.child('estado/i').set(n);else if(S.libre){me.li=n;draw()}}
+function rv(n){me.li=n-1;draw()}
+function back(){me.li=null;draw()}
+function tg(p,n){ref.child('estado/'+p+'/'+n).set(S[p][n]?null:true)}
+function tf(p){ref.child('estado/'+p).set(S[p]?null:true)}
+function hidden(n){return !me.d&&SC.includes(n)&&S.act[n]&&!S.mostrar[n]}
+function draw(){
+ const n=cur()+1;
+ $('sl').innerHTML=hidden(n)?'<div style="padding:20px"><h2 style="color:var(--g)">Actividad en curso</h2><p>La diapositiva está oculta mientras respondes. Resuelve en el panel de abajo.</p></div>':`<img src="slides/s${n}.webp" alt="Diapositiva ${n}">`;
+ if(n<NS)new Image().src=`slides/s${n+1}.webp`;
+ let h='';
+ if(me.d)h=`<button onclick="go(S.i-1)">◀</button><b>${n} / ${NS}</b><button onclick="go(S.i+1)">▶</button> <input type="number" min="1" max="${NS}" placeholder="Ir a…" style="width:90px;margin:0" onchange="go(this.value-1)"> <button class="${S.libre?'on':'s'}" onclick="tf('libre')">Modo libre</button> <button class="s" onclick="csv()">Exportar CSV</button>`;
+ else{h=`<b>${n} / ${NS}</b>`;if(S.libre||me.li!=null)h=`<button onclick="go(${cur()-1})" ${S.libre?'':'hidden'}>◀</button>`+h+`<button onclick="go(${cur()+1})" ${S.libre?'':'hidden'}>▶</button>`;
+  if(me.li!=null&&S.pub)h+=` <button class="s" onclick="back()">Volver a mis resultados</button>`;
+  if(S.libre)h+=' <small>Modo libre: avanza a tu ritmo</small>'}
+ $('nav').innerHTML=h;sig='';panel();
+}
+const ord=(len,seed)=>{let a=[...Array(len).keys()],h=0;for(const c of seed)h=(h*31+c.charCodeAt(0))>>>0;
+ for(let i=len-1;i>0;i--){h=(h*1103515245+12345)>>>0;const j=h%(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+function panel(){
+ if(!me||!ref)return;const n=cur()+1,a=ACT[n],el=$('panel');
+ if(me.d){el.innerHTML=ctl(n,a);return}
+ const mine=(R[n]||{})[me.cod],s=[n,S.act[n],S.rev[n],S.pub,!!mine,n===LAST?JSON.stringify(R).length:0,Object.keys(NB).length].join('|');
+ if(s===sig)return;sig=s;el.innerHTML=stu(n,a,mine);
+}
+function ctl(n,a){
+ let h='';
+ if(a){h+=`<h3>${esc(a.h)}</h3><button class="${S.act[n]?'on':''}" onclick="tg('act',${n})">${S.act[n]?'Cerrar actividad':'Abrir actividad'}</button>`;
+  if(a.t!=='nube')h+=`<button class="${S.rev[n]?'on':'s'}" onclick="tg('rev',${n})">${S.rev[n]?'Ocultar solución':'Revelar solución'}</button>`;
+  if(SC.includes(n))h+=`<button class="${S.mostrar[n]?'on':'s'}" onclick="tg('mostrar',${n})">${S.mostrar[n]?'Diapositiva visible':'Mostrar diapositiva'}</button>`;
+  if(a.t==='sel'){const r=Object.values(R[n]||{});h+=`<p><b>${r.length}</b> respuestas · porcentaje de acierto por ítem:</p>`;
+   a.i.forEach((it,k)=>{const ok=r.filter(x=>x.a&&x.a[k]==it[1]).length,p=r.length?Math.round(ok/r.length*100):0;
+    h+=`<div class="bar"><i style="width:${p}%"></i><span>${k+1}. ${esc(it[0])}</span><b>${p}%</b></div>`});
+   if(a.j){h+='<h3>Justificaciones</h3>';r.filter(x=>x.j).forEach(x=>h+=`<div class="tx"><b>${esc(x.nom)}</b> (${esc(x.gr)}): ${esc(x.j)}</div>`)}}
+  if(a.t==='nube')h+=cloud();
+  if(a.t==='txt'){const r=Object.values(R[n]||{}),gs={};r.forEach(x=>(gs[x.gr]=gs[x.gr]||[]).push(x));h+=`<p><b>${r.length}</b> respuestas</p>`;
+   Object.keys(gs).sort().forEach(g=>{h+=`<h3>Grupo ${esc(g)}</h3>`;gs[g].forEach(x=>{h+=`<div class="tx"><b>${esc(x.nom)}</b><br>`+a.f.map((f,k)=>`<i>${esc(f)}:</i> ${esc((x.x||[])[k]||'')}`).join('<br>')+'</div>'})})}}
+ if(n===LAST)h+=`<h3>Cierre</h3><p>Publica los resultados cuando termines de revelar todas las soluciones.</p><button class="${S.pub?'on':''}" onclick="tf('pub')">${S.pub?'Resultados publicados':'Publicar resultados'}</button> <button class="s" onclick="csv()">Exportar CSV</button>`;
+ return h;
+}
+function cloud(){const c={};Object.values(NB).forEach(w=>{const k=String(w).toLowerCase();c[k]=(c[k]||0)+1});
+ const m=Math.max(1,...Object.values(c));return '<div id="cl">'+Object.entries(c).map(([w,v])=>`<span style="font-size:${14+v/m*30}px;font-weight:${v>1?700:500}">${esc(w)}</span>`).join('')+'</div>'}
+function stu(n,a,mine){
+ if(n===LAST){if(!S.pub)return '<p>Los resultados se publicarán al final de la sesión.</p>';return resultados()}
+ if(!a)return '';
+ if(a.t==='nube'){if(!S.act[n]&&!Object.keys(NB).length)return '<p>La nube se abrirá cuando el docente active la actividad.</p>';
+  return `<h3>${esc(a.h)}</h3>`+(S.act[n]&&!me.nb?'<input id="w0" maxlength="30" placeholder="Palabra 1"><input id="w1" maxlength="30" placeholder="Palabra 2 (opcional)"><input id="w2" maxlength="30" placeholder="Palabra 3 (opcional)"><button onclick="sendNube()">Enviar palabras</button>':'<p>'+(me.nb?'Enviado ✓':'Actividad cerrada')+'</p>')+cloud()}
+ if(!S.act[n]&&!mine)return `<h3>${esc(a.h)}</h3><p>Actividad cerrada. Espera la indicación del docente.</p>`;
+ if(a.t==='txt'){let h=`<h3>${esc(a.h)}</h3>`;if(mine)return h+'<p>Enviado ✓</p>'+a.f.map((f,k)=>`<div class="tx"><i>${esc(f)}:</i> ${esc((mine.x||[])[k]||'')}</div>`).join('');
+  a.f.forEach((f,k)=>h+=`<label>${esc(f)}</label><textarea id="x${k}" rows="2"></textarea>`);return h+`<button onclick="sendTxt(${n})">Enviar</button>`}
+ let h=`<h3>${esc(a.h)} <small>${a.p} pts</small></h3>`;
+ a.i.forEach((it,k)=>{const o=it[2]||a.o,od=a.sh?ord(o.length,me.cod+n+k):o.map((_,x)=>x);h+=`<div class="it"><p>${k+1}. ${esc(it[0])}</p>`;
+  if(mine){const ok=mine.a[k]==it[1];h+=`<p class="${S.rev[n]?(ok?'ok':'no'):''}">Tu respuesta: ${esc(o[mine.a[k]])}${S.rev[n]?(ok?' ✓':' ✗ · Correcta: '+esc(o[it[1]])):''}</p>`}
+  else h+=`<select id="q${k}"><option value="">Elige…</option>${od.map(x=>`<option value="${x}">${esc(o[x])}</option>`).join('')}</select>`;h+='</div>'});
+ if(mine)return h+`<p>Enviado ✓ ${S.rev[n]?`· Puntaje: <b>${mine.s}/${a.p}</b>`:'· El puntaje se mostrará cuando el docente revele la solución.'}</p>`;
+ if(a.j)h+=`<p>${esc(a.j)}</p><textarea id="jj" rows="3"></textarea>`;
+ return h+`<button onclick="sendSel(${n})">Enviar respuestas</button>`;
+}
+async function put(n,v){if(!S.act[n])return alert('La actividad está cerrada');
+ const r=ref.child('resp/'+n+'/'+me.cod);if((await r.once('value')).val())return alert('Ya enviaste esta actividad');
+ await r.set({nom:me.nom,gr:me.gr,t:Date.now(),...v})}
+function sendSel(n){const a=ACT[n],ans=[];for(let k=0;k<a.i.length;k++){const v=$('q'+k).value;if(v==='')return alert('Responde todos los ítems');ans.push(+v)}
+ const ok=a.i.filter((it,k)=>ans[k]===it[1]).length;
+ put(n,{a:ans,j:a.j?$('jj').value:'',s:Math.round(ok/a.i.length*a.p*100)/100})}
+function sendTxt(n){const a=ACT[n],x=a.f.map((f,k)=>$('x'+k).value.trim());if(!x.some(v=>v))return alert('Escribe tu respuesta');put(n,{x})}
+function sendNube(){const w=[0,1,2].map(k=>$('w'+k).value.trim()).filter(Boolean);if(!w.length)return alert('Escribe al menos una palabra');
+ w.forEach(x=>ref.child('nube').push(x));me.nb=1;sig='';panel()}
+function totals(){const st={};SC.forEach(n=>Object.entries(R[n]||{}).forEach(([c,m])=>{const o=st[c]=st[c]||{nom:m.nom,gr:m.gr,s:{},tot:0};o.s[n]=m.s;o.tot+=m.s}));return st}
+function resultados(){
+ let tot=0,rows='';const rep=new Map();
+ SC.forEach(n=>{const a=ACT[n],m=(R[n]||{})[me.cod];
+  if(!m){rows+=`<tr><td>Diap. ${n} · ${esc(a.h)}</td><td>—</td></tr>`;return}
+  tot+=m.s;rows+=`<tr><td>Diap. ${n} · ${esc(a.h)}</td><td>${m.s}/${a.p}</td></tr>`;
+  a.i.forEach((it,k)=>{if(m.a[k]!=it[1]){const t=T[n].length>1?T[n][k]:T[n][0];rep.set(t[0],t[1])}})});
+ const g=Object.values(totals()).filter(x=>x.gr===me.gr),avg=g.length?g.reduce((p,x)=>p+x.tot,0)/g.length:0;
+ let h=`<h3>Tus resultados</h3><p class="big">${Math.round(tot*10)/10} / 100</p><p>Promedio de tu grupo (${esc(me.gr)}, ${g.length} participantes): <b>${avg.toFixed(1)}</b></p><table>${rows}</table><h3 style="margin-top:14px">Para repasar</h3>`;
+ if(!rep.size)return h+'<p class="ok">¡Felicitaciones! Acertaste todos los ítems con puntaje.</p>';
+ return h+[...rep].map(([t,s])=>`<p>${esc(t)} <button class="s" onclick="rv(${s})">Ver diapositiva ${s}</button></p>`).join('');
+}
+function csv(){
+ const st=totals(),q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',ex=Object.keys(ACT).filter(n=>ACT[n].t==='txt'||ACT[n].j).map(Number);
+ const jx={};ex.forEach(n=>Object.entries(R[n]||{}).forEach(([c,m])=>{(st[c]=st[c]||{nom:m.nom,gr:m.gr,s:{},tot:0});(jx[c]=jx[c]||{})[n]=ACT[n].t==='txt'?(m.x||[]).join(' | '):m.j}));
+ let r=[['codigo','nombre','grupo',...SC.map(n=>'Diap'+n+' ('+ACT[n].p+')'),'total',...ex.map(n=>'Texto Diap'+n)]];
+ Object.entries(st).sort((a,b)=>a[1].gr.localeCompare(b[1].gr)||a[1].nom.localeCompare(b[1].nom)).forEach(([c,o])=>r.push([c,o.nom,o.gr,...SC.map(n=>o.s[n]??''),o.tot,...ex.map(n=>(jx[c]||{})[n]||'')]));
+ const b=new Blob(['\ufeff'+r.map(x=>x.map(q).join(',')).join('\n')],{type:'text/csv;charset=utf-8'}),l=document.createElement('a');
+ l.href=URL.createObjectURL(b);l.download='tema6_'+me.sala+'.csv';l.click();
+}
+</script></body></html>
