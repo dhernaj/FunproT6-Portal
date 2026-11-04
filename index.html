@@ -166,7 +166,7 @@ function ctl(n,a){
   if(a.t==='nube')h+=cloud();
   if(a.t==='txt'){const r=Object.values(R[n]||{}),gs={};r.forEach(x=>(gs[x.gr]=gs[x.gr]||[]).push(x));h+=`<p><b>${r.length}</b> respuestas</p>`;
    Object.keys(gs).sort().forEach(g=>{h+=`<h3>Grupo ${esc(g)}</h3>`;gs[g].forEach(x=>{h+=`<div class="tx"><b>${esc(x.nom)}</b><br>`+a.f.map((f,k)=>`<i>${esc(f)}:</i> ${esc((x.x||[])[k]||'')}`).join('<br>')+'</div>'})})}}
- if(n===LAST)h+=`<h3>Cierre</h3><p>Publica los resultados cuando termines de revelar todas las soluciones.</p><button class="${S.pub?'on':''}" onclick="tf('pub')">${S.pub?'Resultados publicados':'Publicar resultados'}</button> <button class="s" onclick="csv()">Exportar CSV</button>`;
+ if(n===LAST)h+=`<h3>Cierre</h3><p>Publica los resultados cuando termines de revelar todas las soluciones.</p><button class="${S.pub?'on':''}" onclick="tf('pub')">${S.pub?'Resultados publicados':'Publicar resultados'}</button> <button class="s" onclick="csv()">Exportar CSV</button>`+dash(1);
  return h;
 }
 function votBars(n,a){const r=Object.values(R[n]||{}),t=r.length;return `<p><b>${t}</b> votos</p>`+a.o.map((o,x)=>{const c=r.filter(y=>y.v===x).length,p=t?Math.round(c/t*100):0;return `<div class="bar"><i style="width:${p}%"></i><span>${esc(o)}</span><b>${c} (${p}%)</b></div>`}).join('')}
@@ -200,6 +200,20 @@ function sendTxt(n){const a=ACT[n],x=a.f.map((f,k)=>$('x'+k).value.trim());if(!x
 function sendNube(){const w=[0,1,2].map(k=>$('w'+k).value.trim()).filter(Boolean);if(!w.length)return alert('Escribe al menos una palabra');
  w.forEach(x=>ref.child('nube').push(x));me.nb=1;sig='';panel()}
 function totals(){const st={};SC.forEach(n=>Object.entries(R[n]||{}).forEach(([c,m])=>{const o=st[c]=st[c]||{nom:m.nom,gr:m.gr,l:m.l,s:{},tot:0};o.s[n]=m.s;o.tot+=m.s}));return st}
+function dash(t){
+ const st=Object.values(totals()),N=st.length,r1=v=>Math.round(v*10)/10;
+ if(!N)return '<h3 style="margin-top:14px">Resultados del salón</h3><p>Aún no hay respuestas con puntaje.</p>';
+ const tt=st.map(x=>x.tot),avg=tt.reduce((a,b)=>a+b,0)/N,bar=(l,p,x)=>`<div class="bar"><i style="width:${p}%"></i><span>${l}</span><b>${x}</b></div>`;
+ let h=`<h3 style="margin-top:14px">Resultados del salón</h3><p><b>${N}</b> participantes · promedio <b>${avg.toFixed(1)}</b>/100 · máximo <b>${r1(Math.max(...tt))}</b> · mínimo <b>${r1(Math.min(...tt))}</b></p>`;
+ let rk=0,pv=null,c=0,rows='';
+ [...st].sort((a,b)=>b.tot-a.tot).forEach((x,i)=>{if(x.tot!==pv){rk=i+1;pv=x.tot}if(rk<=5&&c++<8)rows+=`<tr><td>${rk}.º ${esc(x.nom)} <small>(${esc(x.gr)} · ${x.l==='cs'?'C#':'Python'})</small></td><td>${r1(x.tot)}</td></tr>`});
+ h+=`<h3>Top 5</h3><table>${rows}</table>`+(t?'<small>Python y C# tienen ejercicios distintos en las diap. 22, 27 y 37: los puntajes no son del todo comparables. Los empates comparten puesto.</small>':'');
+ const b=[0,0,0,0,0];tt.forEach(v=>b[Math.min(4,Math.floor(v/20))]++);
+ h+='<h3 style="margin-top:12px">Distribución de puntajes</h3>'+b.map((n,i)=>bar(`${i*20}–${i*20+20}`,n/N*100,n)).join('');
+ h+='<h3 style="margin-top:12px">Acierto promedio por actividad</h3>'+SC.map(n=>{const a=ACT[n],r=Object.values(R[n]||{}),p=r.length?r.reduce((x,y)=>x+y.s,0)/(r.length*a.p)*100:0;return bar(`Diap. ${n} · ${esc(a.h.slice(0,48))} <small>(${r.length} resp.)</small>`,p,Math.round(p)+'%')}).join('');
+ const grp=(k,f)=>{const m={};st.forEach(x=>{const g=f(x);(m[g]=m[g]||[]).push(x.tot)});return Object.keys(m).sort().map(g=>`<tr><td>${esc(g)} <small>(${m[g].length})</small></td><td>${(m[g].reduce((a,b)=>a+b,0)/m[g].length).toFixed(1)}</td></tr>`).join('')};
+ return h+`<h3 style="margin-top:12px">Promedio por grupo</h3><table>${grp(0,x=>x.gr)}</table><h3 style="margin-top:12px">Promedio por lenguaje</h3><table>${grp(0,x=>x.l==='cs'?'C#':'Python')}</table>`;
+}
 function resultados(){
  let tot=0,rows='';const rep=new Map();
  SC.forEach(n=>{const a=ACT[n],m=(R[n]||{})[me.cod];
@@ -208,8 +222,8 @@ function resultados(){
   a.i.forEach((it,k)=>{if(!isOk(a,it,k,m)){const t=T[n].length>1?T[n][k]:T[n][0];rep.set(t[0],pk(t[1],me.len))}})});
  const g=Object.values(totals()).filter(x=>x.gr===me.gr),avg=g.length?g.reduce((p,x)=>p+x.tot,0)/g.length:0;
  let h=`<h3>Tus resultados</h3><p class="big">${Math.round(tot*10)/10} / 100</p><p>Promedio de tu grupo (${esc(me.gr)}, ${g.length} participantes): <b>${avg.toFixed(1)}</b></p><table>${rows}</table><h3 style="margin-top:14px">Para repasar</h3>`;
- if(!rep.size)return h+'<p class="ok">¡Felicitaciones! Acertaste todos los ítems con puntaje.</p>';
- return h+[...rep].map(([t,s])=>`<p>${esc(t)} <button class="s" onclick="rv(${s})">Ver diapositiva ${s}</button></p>`).join('');
+ if(!rep.size)return h+'<p class="ok">¡Felicitaciones! Acertaste todos los ítems con puntaje.</p>'+dash();
+ return h+[...rep].map(([t,s])=>`<p>${esc(t)} <button class="s" onclick="rv(${s})">Ver diapositiva ${s}</button></p>`).join('')+dash();
 }
 function csv(){
  const st=totals(),q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',ex=Object.keys(ACT).filter(n=>ACT[n].t==='txt'||ACT[n].j).map(Number);
