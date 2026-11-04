@@ -106,7 +106,7 @@ const V=x=>x&&typeof x==='object'&&!Array.isArray(x)?(me.len?x[me.len]:'[Py] '+x
 const nm=s=>String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f"'`]/g,'').replace(/\s+/g,' ').trim();
 const okp=(r,c)=>String(c).split('|').some(x=>nm(x)===nm(r));
 const isOk=(a,it,k,m)=>a.t==='pred'?okp(m.a[k],pk(it[1],m.l)):m.a[k]==pk(it[1],m.l);
-let got=0,S={i:0,libre:false,pub:false,act:{},rev:{},mostrar:{}},me,ref,R={},NB={},sig='';
+let lastN=-1,got=0,S={i:0,libre:false,pub:false,act:{},rev:{},mostrar:{}},me,ref,R={},NB={},sig='';
 try{const z=JSON.parse(localStorage.t6||'{}');['sala','cod','nom','gr','len'].forEach(k=>z[k]&&($(k).value=z[k]))}catch(e){}
 async function enter(d){
  const g=k=>$(k).value.trim(),sala=g('sala').toLowerCase().replace(/[^a-z0-9_-]/g,'');
@@ -143,15 +143,16 @@ function draw(){
  else{h=`<b>${n} / ${NS}</b>`;if(S.libre||me.li!=null)h=`<button onclick="go(${cur()-1})" ${S.libre?'':'hidden'}>◀</button>`+h+`<button onclick="go(${cur()+1})" ${S.libre?'':'hidden'}>▶</button>`;
   if(me.li!=null&&S.pub)h+=` <button class="s" onclick="back()">Volver a mis resultados</button>`;
   if(S.libre)h+=' <small>Modo libre: avanza a tu ritmo</small>'}
- $('nav').innerHTML=h;sig='';panel();
+ $('nav').innerHTML=h;if(n!==lastN){sig='';lastN=n}panel();
 }
 const ord=(len,seed)=>{let a=[...Array(len).keys()],h=0;for(const c of seed)h=(h*31+c.charCodeAt(0))>>>0;
  for(let i=len-1;i>0;i--){h=(h*1103515245+12345)>>>0;const j=h%(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
 function panel(){
  if(!me||!ref)return;const n=cur()+1,a=ACT[n],el=$('panel');
  if(me.d){el.innerHTML=ctl(n,a);return}
- const mine=(R[n]||{})[me.cod],s=[n,S.act[n],S.rev[n],S.pub,!!mine,n===LAST?JSON.stringify(R).length:0,Object.keys(NB).length].join('|');
- if(s===sig)return;sig=s;el.innerHTML=stu(n,a,mine);
+ const mine=(R[n]||{})[me.cod],s=[n,S.act[n],S.rev[n],S.pub,!!mine,n===LAST?JSON.stringify(R).length:0,!!Object.keys(NB).length].join('|');
+ if(s===sig){const w=$('cw');if(w&&a&&a.t==='nube')w.innerHTML=cloud();return}
+ sig=s;el.innerHTML=stu(n,a,mine);
 }
 function ctl(n,a){
  let h='';
@@ -176,13 +177,13 @@ function stu(n,a,mine){
  if(n===LAST){if(!S.pub)return '<p>Los resultados se publicarán al final de la sesión.</p>';return resultados()}
  if(!a)return '';
  if(a.t==='nube'){if(!S.act[n]&&!Object.keys(NB).length)return '<p>La nube se abrirá cuando el docente active la actividad.</p>';
-  return `<h3>${esc(a.h)}</h3>`+(S.act[n]&&!me.nb?'<input id="w0" maxlength="30" placeholder="Palabra 1"><input id="w1" maxlength="30" placeholder="Palabra 2 (opcional)"><input id="w2" maxlength="30" placeholder="Palabra 3 (opcional)"><button onclick="sendNube()">Enviar palabras</button>':'<p>'+(me.nb?'Enviado ✓':'Actividad cerrada')+'</p>')+cloud()}
+  return `<h3>${esc(a.h)}</h3>`+(S.act[n]&&!me.nb?'<input id="w0" maxlength="30" placeholder="Palabra 1"><input id="w1" maxlength="30" placeholder="Palabra 2 (opcional)"><input id="w2" maxlength="30" placeholder="Palabra 3 (opcional)"><button onclick="sendNube()">Enviar palabras</button>':'<p>'+(me.nb?'Enviado ✓':'Actividad cerrada')+'</p>')+'<div id="cw">'+cloud()+'</div>'}
  if(!S.act[n]&&!mine)return `<h3>${esc(a.h)}</h3><p>Actividad cerrada. Espera la indicación del docente.</p>`;
  if(a.t==='vot'){let h=`<h3>${esc(a.h)}</h3>`;if(mine)h+=`<p>Votaste: <b>${esc(a.o[mine.v])}</b> ✓</p>`;else h+=a.o.map((o,x)=>`<button class="s" onclick="put(${n},{v:${x}})">${esc(o)}</button>`).join('<br>');return h+(S.rev[n]?votBars(n,a):'')}
  if(a.t==='txt'){let h=`<h3>${esc(a.h)}</h3>`;if(mine)return h+'<p>Enviado ✓</p>'+a.f.map((f,k)=>`<div class="tx"><i>${esc(f)}:</i> ${esc((mine.x||[])[k]||'')}</div>`).join('');
   a.f.forEach((f,k)=>h+=`<label>${esc(f)}</label><textarea id="x${k}" rows="2"></textarea>`);return h+`<button onclick="sendTxt(${n})">Enviar</button>`}
  let h=`<h3>${esc(a.h)} <small>${a.p} pts</small></h3>`;
- a.i.forEach((it,k)=>{const o=pk(it[2],me.len)||a.o,od=a.sh?ord(o.length,me.cod+n+k):o.map((_,x)=>x);h+=`<div class="it"><p>${k+1}. ${esc(V(it[0]))}</p>`;
+ a.i.forEach((it,k)=>{const o=pk(it[2],me.len)||a.o||[],od=a.sh?ord(o.length,me.cod+n+k):o.map((_,x)=>x);h+=`<div class="it"><p>${k+1}. ${esc(V(it[0]))}</p>`;
   if(mine){const ok=isOk(a,it,k,mine),c=a.t==='pred'?String(pk(it[1],mine.l)).split('|')[0]:o[pk(it[1],mine.l)];h+=`<p class="${S.rev[n]?(ok?'ok':'no'):''}">Tu respuesta: ${esc(a.t==='pred'?mine.a[k]:o[mine.a[k]])}${S.rev[n]?(ok?' ✓':' ✗ · Correcta: '+esc(c)):''}</p>`}
   else if(a.t==='pred')h+=`<input id="q${k}" autocomplete="off" placeholder="Tu respuesta">`;
   else h+=`<select id="q${k}"><option value="">Elige…</option>${od.map(x=>`<option value="${x}">${esc(o[x])}</option>`).join('')}</select>`;h+='</div>'});
