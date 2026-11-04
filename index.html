@@ -30,6 +30,7 @@ table{border-collapse:collapse;width:100%}td{border-bottom:1px solid #eee;paddin
 <label>Código de sala</label><input id="sala" placeholder="ej. t6-prueba">
 <label>Código de estudiante</label><input id="cod">
 <label>Nombre</label><input id="nom">
+<label>Lenguaje</label><select id="len"><option value="py">Python</option><option value="cs">C#</option></select>
 <label>Grupo</label><input id="gr" placeholder="ej. G1">
 <button onclick="enter(0)">Entrar como estudiante</button> <button class="s" onclick="enter(1)">Soy docente</button></div>
 <div id="app" hidden>
@@ -41,29 +42,48 @@ table{border-collapse:collapse;width:100%}td{border-bottom:1px solid #eee;paddin
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
 firebase.initializeApp({databaseURL:"https://funprot6-default-rtdb.firebaseio.com"});
-const NS=43,LAST=43,SC=[5,8,20,31,38];
+const NS=43,LAST=43,SC=[5,8,20,21,22,27,31,37,38];
 const PH='abdba6369856b0f417d350840ed60937a1dff61c4a2852ed3be1348e221d2d31';
 const YN=['Aprobado','No aprobado'];
 const ACT={
 2:{t:'nube',h:'Nube de palabras: ¿qué riesgos aparecen cuando un programa funciona pero crece sin organización?'},
-5:{t:'sel',p:20,sh:1,h:'Repaso: parámetros, retorno y llamada',o:['Parámetro','Argumento','Valor retornado','Variable local'],i:[
+5:{t:'sel',p:10,sh:1,h:'Repaso: parámetros, retorno y llamada',o:['Parámetro','Argumento','Valor retornado','Variable local'],i:[
  ['En def calcular_promedio(notas), ¿qué es notas?',0],
  ['En calcular_promedio([15, 17, 12, 16]), ¿qué es la lista entre paréntesis?',1],
  ['¿Qué es el 15.0 que sale de la función y se guarda en resultado?',2],
  ['¿Qué es suma, declarada dentro de la función?',3]]},
-8:{t:'sel',p:20,sh:1,h:'Sistema de notas: ¿qué tareas separarías?',o:['Función separada (procesamiento)','Puede quedar en el principal (entrada/salida)'],j:'Justifica con una responsabilidad concreta una de tus decisiones:',i:[
+8:{t:'sel',p:10,sh:1,h:'Sistema de notas: ¿qué tareas separarías?',o:['Función separada (procesamiento)','Puede quedar en el principal (entrada/salida)'],j:'Justifica con una responsabilidad concreta una de tus decisiones:',i:[
  ['Pedir notas',1],['Calcular promedio',0],['Determinar condición',0],['Mostrar resultados',1]]},
-20:{t:'sel',p:20,sh:1,h:'Condición académica reutilizable (aprobado si promedio ≥ 13)',o:YN,i:[
+20:{t:'sel',p:10,sh:1,h:'Condición académica reutilizable (aprobado si promedio ≥ 13)',o:YN,i:[
  ['Promedio 13 →',0],['Promedio 12.99 →',1],
  ['¿Qué retorna determinar_condicion cuando la condición es falsa?',1,['"Aprobado"','"No aprobado"','Nada (None)','False']],
  ['¿Dónde se agrega determinar_condicion en Python?',0,['Al módulo calculos.py','Solo en main.py','Dentro de calcular_promedio','En un archivo nuevo obligatorio']]]},
-31:{t:'sel',p:25,sh:1,h:'Pruebas del sistema: predice el resultado (escala 0–20, aprobado desde 13)',o:['Aprobado','No aprobado','Datos no válidos'],i:[
+31:{t:'sel',p:10,sh:1,h:'Pruebas del sistema: predice el resultado (escala 0–20, aprobado desde 13)',o:['Aprobado','No aprobado','Datos no válidos'],i:[
  ['Entrada [13]',0],['Entrada [12.99]',1],['Entrada []',2],
  ['Entrada [0, 20]',1,['10.00 / Aprobado','10.00 / No aprobado','20.00 / Aprobado','Datos no válidos']],
  ['Entrada [15, 21]',2]]},
-38:{t:'sel',p:15,sh:1,h:'Transferencia: reutiliza la función de promedio',i:[
+38:{t:'sel',p:10,sh:1,h:'Transferencia: reutiliza la función de promedio',i:[
  ['Al reutilizar la función con otros datos, ¿qué cambia?',0,['El argumento de la llamada','La definición de la función','El nombre de la función','El archivo calculos.py']],
  ['En el sistema completo, ¿qué se hace antes de llamar al cálculo?',0,['Validar las notas','Copiar la función','Instalar un paquete','Cambiar la fórmula']]]},
+10:{t:'vot',h:'Votación: ¿dónde debe ir la validación de las notas?',o:['Dentro de la función que calcula el promedio','En el programa principal, antes de llamar al cálculo','En una función propia de validación reutilizable','En ningún lugar: el usuario siempre escribe datos correctos']},
+21:{t:'sel',p:10,h:'Ordena el flujo del programa principal (1 = primero)',o:['1','2','3','4'],i:[
+ [{py:'print(f"{promedio:.2f} - {condicion}")',cs:'Console.WriteLine($"{promedio:F2} - {condicion}")'},3],
+ [{py:'notas_validas(notas)',cs:'Calculos.NotasValidas(notas)'},0],
+ [{py:'determinar_condicion(promedio)',cs:'Calculos.DeterminarCondicion(promedio)'},2],
+ [{py:'calcular_promedio(notas)',cs:'Calculos.CalcularPromedio(notas)'},1]]},
+22:{t:'pred',p:15,h:'Predice la salida (escribe exactamente lo que se imprime; si no compila o falla, escribe «error»)',i:[
+ [{py:'print(7 / 2)',cs:'Console.WriteLine(7 / 2);'},{py:'3.5',cs:'3'}],
+ [{py:'def f(x): x * 2   →   print(f(3))',cs:'static void F(int x) { int y = x * 2; }   →   Console.WriteLine(F(3));'},{py:'None',cs:'error|error de compilacion|no compila'}],
+ [{py:'total = 10; def g(x): total = x * 2; return total + 1   →   print(g(3), total)',cs:'int total = 10; static int G(int x) { int total = x * 2; return total + 1; }   →   Console.WriteLine(G(3) + " " + total);'},'7 10']]},
+27:{t:'sel',p:10,sh:1,h:'Convenciones de nombres de tu lenguaje',o:['calcular_promedio','CalcularPromedio','calcularPromedio','Calcular-Promedio'],i:[
+ ['Nombre correcto de una función o método que calcula el promedio',{py:0,cs:1}],
+ ['Nombre correcto de una variable local para la suma total',{py:0,cs:2},['suma_total','SumaTotal','sumaTotal','Suma-Total']],
+ ['Nombre correcto de una clase para el sistema de notas',1,['sistema_notas','SistemaNotas','sistemaNotas','Sistema-Notas']],
+ ['¿Cuál de estos nombres rompe la convención de tu lenguaje?',2,{py:['calcular_promedio','suma_total','CalcularPromedio','nota_minima'],cs:['CalcularPromedio','sumaTotal','calcular_promedio','NotaMinima']}]]},
+37:{t:'sel',p:15,sh:1,h:'Antes de reutilizar: encuentra el error',i:[
+ [{py:'if promedio > 13: return "Aprobado"  — la regla dice aprobado desde 13. ¿Qué falla?',cs:'if (promedio > 13) return "Aprobado";  — la regla dice aprobado desde 13. ¿Qué falla?'},0,['El operador > excluye al 13','El return está mal escrito','Falta un else','El nombre de la función']],
+ [{py:'Se llama calcular_promedio([]) sin validar antes. ¿Qué ocurre?',cs:'En CalcularPromedio, suma es int (31) y hay 2 notas; se escribe double promedio = suma / notas.Length;. ¿Qué valor queda?'},0,{py:['Error ZeroDivisionError','Devuelve 0','Devuelve None','Devuelve []'],cs:['15','15.5','16','Error de compilación']}],
+ [{py:'main.py llama calcular_promedio(15, 17, 12) con tres números sueltos. ¿Qué falla?',cs:'Program.cs llama Calculos.CalcularPromedio(15, 17, 12) con tres números. ¿Qué falla?'},0,{py:['Pasa tres argumentos; la función espera una lista','Falta importar math','La función debe ser privada','Falta crear calculos.py'],cs:['La firma espera un arreglo; hay tres argumentos','Falta using System.Math','El método debe ser privado','Falta crear Calculos.cs']}]]},
 24:{t:'txt',h:'Organización de funciones (en parejas)',f:['Funciones en calculos.py','Funciones en main.py','Línea de importación','Secuencia de llamadas después de validar']},
 32:{t:'txt',h:'Legibilidad y dos casos de prueba',f:['Nombres mejorados (p, x, s, a)','Docstring: propósito, entrada y retorno','Predicción para [10, 20]','Predicción para [13]']},
 39:{t:'txt',h:'Actividad integradora: reporte del equipo',f:['Lenguaje elegido','Archivos y responsabilidad de cada uno','Casos de prueba registrados (resumen)']},
@@ -73,22 +93,31 @@ const T={
 5:[['Parámetros, retorno y llamada',5]],
 8:[['Entrada/salida y principal',10],['Funciones de cálculo',7],['Condición académica',10],['Entrada/salida y principal',10]],
 20:[['Condición académica reutilizable',20]],
-31:[['Condición y umbral',20],['Condición y umbral',20],['Validación antes de calcular',13],['Tabla de pruebas y casos límite',31],['Validación antes de calcular',13]],
-38:[['Reutilización de funciones',34],['Validación antes de calcular',13]]};
+31:[['Condición y umbral',20],['Condición y umbral',20],['Validación antes de calcular',{py:13,cs:17}],['Tabla de pruebas y casos límite',31],['Validación antes de calcular',{py:13,cs:17}]],
+21:[['Orden de las llamadas',21]],
+22:[['Operadores y tipos',22],['Funciones que no retornan',5],['Variables locales',5]],
+27:[['Convenciones de nombres',27]],
+37:[['Condiciones y casos límite',31],['Validar antes de calcular',{py:13,cs:17}],['Contrato de la función',37]],
+38:[['Reutilización de funciones',34],['Validación antes de calcular',{py:13,cs:17}]]};
 const db=firebase.database(),$=id=>document.getElementById(id);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const pk=(x,l)=>x&&typeof x==='object'&&!Array.isArray(x)?x[l]:x;
+const V=x=>x&&typeof x==='object'&&!Array.isArray(x)?(me.len?x[me.len]:'[Py] '+x.py+' · [C#] '+x.cs):x;
+const nm=s=>String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f"'`]/g,'').replace(/\s+/g,' ').trim();
+const okp=(r,c)=>String(c).split('|').some(x=>nm(x)===nm(r));
+const isOk=(a,it,k,m)=>a.t==='pred'?okp(m.a[k],pk(it[1],m.l)):m.a[k]==pk(it[1],m.l);
 let got=0,S={i:0,libre:false,pub:false,act:{},rev:{},mostrar:{}},me,ref,R={},NB={},sig='';
-try{const z=JSON.parse(localStorage.t6||'{}');['sala','cod','nom','gr'].forEach(k=>z[k]&&($(k).value=z[k]))}catch(e){}
+try{const z=JSON.parse(localStorage.t6||'{}');['sala','cod','nom','gr','len'].forEach(k=>z[k]&&($(k).value=z[k]))}catch(e){}
 async function enter(d){
  const g=k=>$(k).value.trim(),sala=g('sala').toLowerCase().replace(/[^a-z0-9_-]/g,'');
  if(!sala)return alert('Escribe el código de sala');
- me={d,sala,cod:g('cod').replace(/[.#$\/\[\]\s]/g,''),nom:g('nom'),gr:g('gr')||'—',li:null};
+ me={d,len:d?'':$('len').value,sala,cod:g('cod').replace(/[.#$\/\[\]\s]/g,''),nom:g('nom'),gr:g('gr')||'—',li:null};
  if(!d&&(!me.cod||!me.nom))return alert('Completa código y nombre');
- try{localStorage.t6=JSON.stringify({sala,cod:g('cod'),nom:g('nom'),gr:g('gr')})}catch(e){}
+ try{localStorage.t6=JSON.stringify({sala,cod:g('cod'),nom:g('nom'),gr:g('gr'),len:$('len').value})}catch(e){}
  ref=db.ref('salas/'+sala);
  if(d){const k=prompt('Clave docente:');if(k===null)return;const h=[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(k)))].map(b=>b.toString(16).padStart(2,'0')).join('');
   if(h!==PH)return alert('Clave docente incorrecta')}
- $('lg').hidden=true;$('app').hidden=false;$('who').innerHTML=d?'Docente · sala '+esc(sala):esc(me.nom)+' · '+esc(me.gr);
+ $('lg').hidden=true;$('app').hidden=false;$('who').innerHTML=d?'Docente · sala '+esc(sala):esc(me.nom)+' · '+esc(me.gr)+' · '+(me.len==='cs'?'C#':'Python');
  const fail=m=>{$('nav').innerHTML='<span class="no">'+m+'</span>'};
  $('nav').textContent='Conectando…';setTimeout(()=>{if(!got)fail('Sin conexión con la base de datos. Revisa la dirección de Firebase y las reglas.')},8000);
  ref.child('estado').on('value',s=>{got=1;const v=s.val()||{},pi=S.i;
@@ -129,9 +158,10 @@ function ctl(n,a){
  if(a){h+=`<h3>${esc(a.h)}</h3><button class="${S.act[n]?'on':''}" onclick="tg('act',${n})">${S.act[n]?'Cerrar actividad':'Abrir actividad'}</button>`;
   if(a.t!=='nube')h+=`<button class="${S.rev[n]?'on':'s'}" onclick="tg('rev',${n})">${S.rev[n]?'Ocultar solución':'Revelar solución'}</button>`;
   if(SC.includes(n))h+=`<button class="${S.mostrar[n]?'on':'s'}" onclick="tg('mostrar',${n})">${S.mostrar[n]?'Diapositiva visible':'Mostrar diapositiva'}</button>`;
-  if(a.t==='sel'){const r=Object.values(R[n]||{});h+=`<p><b>${r.length}</b> respuestas · porcentaje de acierto por ítem:</p>`;
-   a.i.forEach((it,k)=>{const ok=r.filter(x=>x.a&&x.a[k]==it[1]).length,p=r.length?Math.round(ok/r.length*100):0;
-    h+=`<div class="bar"><i style="width:${p}%"></i><span>${k+1}. ${esc(it[0])}</span><b>${p}%</b></div>`});
+  if(a.t==='vot')h+=votBars(n,a);
+  if(a.t==='sel'||a.t==='pred'){const r=Object.values(R[n]||{});h+=`<p><b>${r.length}</b> respuestas (Python ${r.filter(x=>x.l==='py').length} · C# ${r.filter(x=>x.l==='cs').length}) · porcentaje de acierto por ítem:</p>`;
+   a.i.forEach((it,k)=>{const ok=r.filter(x=>x.a&&isOk(a,it,k,x)).length,p=r.length?Math.round(ok/r.length*100):0;
+    h+=`<div class="bar"><i style="width:${p}%"></i><span>${k+1}. ${esc(V(it[0]))}</span><b>${p}%</b></div>`});
    if(a.j){h+='<h3>Justificaciones</h3>';r.filter(x=>x.j).forEach(x=>h+=`<div class="tx"><b>${esc(x.nom)}</b> (${esc(x.gr)}): ${esc(x.j)}</div>`)}}
   if(a.t==='nube')h+=cloud();
   if(a.t==='txt'){const r=Object.values(R[n]||{}),gs={};r.forEach(x=>(gs[x.gr]=gs[x.gr]||[]).push(x));h+=`<p><b>${r.length}</b> respuestas</p>`;
@@ -139,6 +169,7 @@ function ctl(n,a){
  if(n===LAST)h+=`<h3>Cierre</h3><p>Publica los resultados cuando termines de revelar todas las soluciones.</p><button class="${S.pub?'on':''}" onclick="tf('pub')">${S.pub?'Resultados publicados':'Publicar resultados'}</button> <button class="s" onclick="csv()">Exportar CSV</button>`;
  return h;
 }
+function votBars(n,a){const r=Object.values(R[n]||{}),t=r.length;return `<p><b>${t}</b> votos</p>`+a.o.map((o,x)=>{const c=r.filter(y=>y.v===x).length,p=t?Math.round(c/t*100):0;return `<div class="bar"><i style="width:${p}%"></i><span>${esc(o)}</span><b>${c} (${p}%)</b></div>`}).join('')}
 function cloud(){const c={};Object.values(NB).forEach(w=>{const k=String(w).toLowerCase();c[k]=(c[k]||0)+1});
  const m=Math.max(1,...Object.values(c));return '<div id="cl">'+Object.entries(c).map(([w,v])=>`<span style="font-size:${14+v/m*30}px;font-weight:${v>1?700:500}">${esc(w)}</span>`).join('')+'</div>'}
 function stu(n,a,mine){
@@ -147,11 +178,13 @@ function stu(n,a,mine){
  if(a.t==='nube'){if(!S.act[n]&&!Object.keys(NB).length)return '<p>La nube se abrirá cuando el docente active la actividad.</p>';
   return `<h3>${esc(a.h)}</h3>`+(S.act[n]&&!me.nb?'<input id="w0" maxlength="30" placeholder="Palabra 1"><input id="w1" maxlength="30" placeholder="Palabra 2 (opcional)"><input id="w2" maxlength="30" placeholder="Palabra 3 (opcional)"><button onclick="sendNube()">Enviar palabras</button>':'<p>'+(me.nb?'Enviado ✓':'Actividad cerrada')+'</p>')+cloud()}
  if(!S.act[n]&&!mine)return `<h3>${esc(a.h)}</h3><p>Actividad cerrada. Espera la indicación del docente.</p>`;
+ if(a.t==='vot'){let h=`<h3>${esc(a.h)}</h3>`;if(mine)h+=`<p>Votaste: <b>${esc(a.o[mine.v])}</b> ✓</p>`;else h+=a.o.map((o,x)=>`<button class="s" onclick="put(${n},{v:${x}})">${esc(o)}</button>`).join('<br>');return h+(S.rev[n]?votBars(n,a):'')}
  if(a.t==='txt'){let h=`<h3>${esc(a.h)}</h3>`;if(mine)return h+'<p>Enviado ✓</p>'+a.f.map((f,k)=>`<div class="tx"><i>${esc(f)}:</i> ${esc((mine.x||[])[k]||'')}</div>`).join('');
   a.f.forEach((f,k)=>h+=`<label>${esc(f)}</label><textarea id="x${k}" rows="2"></textarea>`);return h+`<button onclick="sendTxt(${n})">Enviar</button>`}
  let h=`<h3>${esc(a.h)} <small>${a.p} pts</small></h3>`;
- a.i.forEach((it,k)=>{const o=it[2]||a.o,od=a.sh?ord(o.length,me.cod+n+k):o.map((_,x)=>x);h+=`<div class="it"><p>${k+1}. ${esc(it[0])}</p>`;
-  if(mine){const ok=mine.a[k]==it[1];h+=`<p class="${S.rev[n]?(ok?'ok':'no'):''}">Tu respuesta: ${esc(o[mine.a[k]])}${S.rev[n]?(ok?' ✓':' ✗ · Correcta: '+esc(o[it[1]])):''}</p>`}
+ a.i.forEach((it,k)=>{const o=pk(it[2],me.len)||a.o,od=a.sh?ord(o.length,me.cod+n+k):o.map((_,x)=>x);h+=`<div class="it"><p>${k+1}. ${esc(V(it[0]))}</p>`;
+  if(mine){const ok=isOk(a,it,k,mine),c=a.t==='pred'?String(pk(it[1],mine.l)).split('|')[0]:o[pk(it[1],mine.l)];h+=`<p class="${S.rev[n]?(ok?'ok':'no'):''}">Tu respuesta: ${esc(a.t==='pred'?mine.a[k]:o[mine.a[k]])}${S.rev[n]?(ok?' ✓':' ✗ · Correcta: '+esc(c)):''}</p>`}
+  else if(a.t==='pred')h+=`<input id="q${k}" autocomplete="off" placeholder="Tu respuesta">`;
   else h+=`<select id="q${k}"><option value="">Elige…</option>${od.map(x=>`<option value="${x}">${esc(o[x])}</option>`).join('')}</select>`;h+='</div>'});
  if(mine)return h+`<p>Enviado ✓ ${S.rev[n]?`· Puntaje: <b>${mine.s}/${a.p}</b>`:'· El puntaje se mostrará cuando el docente revele la solución.'}</p>`;
  if(a.j)h+=`<p>${esc(a.j)}</p><textarea id="jj" rows="3"></textarea>`;
@@ -159,20 +192,20 @@ function stu(n,a,mine){
 }
 async function put(n,v){if(!S.act[n])return alert('La actividad está cerrada');
  const r=ref.child('resp/'+n+'/'+me.cod);if((await r.once('value')).val())return alert('Ya enviaste esta actividad');
- await r.set({nom:me.nom,gr:me.gr,t:Date.now(),...v})}
-function sendSel(n){const a=ACT[n],ans=[];for(let k=0;k<a.i.length;k++){const v=$('q'+k).value;if(v==='')return alert('Responde todos los ítems');ans.push(+v)}
- const ok=a.i.filter((it,k)=>ans[k]===it[1]).length;
+ await r.set({nom:me.nom,gr:me.gr,l:me.len,t:Date.now(),...v})}
+function sendSel(n){const a=ACT[n],ans=[];for(let k=0;k<a.i.length;k++){const v=$('q'+k).value.trim();if(v==='')return alert('Responde todos los ítems');ans.push(a.t==='pred'?v:+v)}
+ const mm={a:ans,l:me.len},ok=a.i.filter((it,k)=>isOk(a,it,k,mm)).length;
  put(n,{a:ans,j:a.j?$('jj').value:'',s:Math.round(ok/a.i.length*a.p*100)/100})}
 function sendTxt(n){const a=ACT[n],x=a.f.map((f,k)=>$('x'+k).value.trim());if(!x.some(v=>v))return alert('Escribe tu respuesta');put(n,{x})}
 function sendNube(){const w=[0,1,2].map(k=>$('w'+k).value.trim()).filter(Boolean);if(!w.length)return alert('Escribe al menos una palabra');
  w.forEach(x=>ref.child('nube').push(x));me.nb=1;sig='';panel()}
-function totals(){const st={};SC.forEach(n=>Object.entries(R[n]||{}).forEach(([c,m])=>{const o=st[c]=st[c]||{nom:m.nom,gr:m.gr,s:{},tot:0};o.s[n]=m.s;o.tot+=m.s}));return st}
+function totals(){const st={};SC.forEach(n=>Object.entries(R[n]||{}).forEach(([c,m])=>{const o=st[c]=st[c]||{nom:m.nom,gr:m.gr,l:m.l,s:{},tot:0};o.s[n]=m.s;o.tot+=m.s}));return st}
 function resultados(){
  let tot=0,rows='';const rep=new Map();
  SC.forEach(n=>{const a=ACT[n],m=(R[n]||{})[me.cod];
   if(!m){rows+=`<tr><td>Diap. ${n} · ${esc(a.h)}</td><td>—</td></tr>`;return}
   tot+=m.s;rows+=`<tr><td>Diap. ${n} · ${esc(a.h)}</td><td>${m.s}/${a.p}</td></tr>`;
-  a.i.forEach((it,k)=>{if(m.a[k]!=it[1]){const t=T[n].length>1?T[n][k]:T[n][0];rep.set(t[0],t[1])}})});
+  a.i.forEach((it,k)=>{if(!isOk(a,it,k,m)){const t=T[n].length>1?T[n][k]:T[n][0];rep.set(t[0],pk(t[1],me.len))}})});
  const g=Object.values(totals()).filter(x=>x.gr===me.gr),avg=g.length?g.reduce((p,x)=>p+x.tot,0)/g.length:0;
  let h=`<h3>Tus resultados</h3><p class="big">${Math.round(tot*10)/10} / 100</p><p>Promedio de tu grupo (${esc(me.gr)}, ${g.length} participantes): <b>${avg.toFixed(1)}</b></p><table>${rows}</table><h3 style="margin-top:14px">Para repasar</h3>`;
  if(!rep.size)return h+'<p class="ok">¡Felicitaciones! Acertaste todos los ítems con puntaje.</p>';
@@ -180,9 +213,9 @@ function resultados(){
 }
 function csv(){
  const st=totals(),q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',ex=Object.keys(ACT).filter(n=>ACT[n].t==='txt'||ACT[n].j).map(Number);
- const jx={};ex.forEach(n=>Object.entries(R[n]||{}).forEach(([c,m])=>{(st[c]=st[c]||{nom:m.nom,gr:m.gr,s:{},tot:0});(jx[c]=jx[c]||{})[n]=ACT[n].t==='txt'?(m.x||[]).join(' | '):m.j}));
- let r=[['codigo','nombre','grupo',...SC.map(n=>'Diap'+n+' ('+ACT[n].p+')'),'total',...ex.map(n=>'Texto Diap'+n)]];
- Object.entries(st).sort((a,b)=>a[1].gr.localeCompare(b[1].gr)||a[1].nom.localeCompare(b[1].nom)).forEach(([c,o])=>r.push([c,o.nom,o.gr,...SC.map(n=>o.s[n]??''),o.tot,...ex.map(n=>(jx[c]||{})[n]||'')]));
+ const jx={};ex.forEach(n=>Object.entries(R[n]||{}).forEach(([c,m])=>{(st[c]=st[c]||{nom:m.nom,gr:m.gr,l:m.l,s:{},tot:0});(jx[c]=jx[c]||{})[n]=ACT[n].t==='txt'?(m.x||[]).join(' | '):m.j}));
+ let r=[['codigo','nombre','grupo','lenguaje',...SC.map(n=>'Diap'+n+' ('+ACT[n].p+')'),'total',...ex.map(n=>'Texto Diap'+n)]];
+ Object.entries(st).sort((a,b)=>a[1].gr.localeCompare(b[1].gr)||a[1].nom.localeCompare(b[1].nom)).forEach(([c,o])=>r.push([c,o.nom,o.gr,o.l||'',...SC.map(n=>o.s[n]??''),o.tot,...ex.map(n=>(jx[c]||{})[n]||'')]));
  const b=new Blob(['\ufeff'+r.map(x=>x.map(q).join(',')).join('\n')],{type:'text/csv;charset=utf-8'}),l=document.createElement('a');
  l.href=URL.createObjectURL(b);l.download='tema6_'+me.sala+'.csv';l.click();
 }
